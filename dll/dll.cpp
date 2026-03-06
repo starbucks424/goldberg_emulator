@@ -1217,3 +1217,14 @@ STEAMCLIENT_API void Steam_TerminateGameConnection( HSteamUser hUser, HSteamPipe
 {
     PRINT_DEBUG("%s\n", __FUNCTION__);
 }
+
+const int k_cchMaxSteamErrMsg = 1024;
+typedef char SteamErrMsg[ k_cchMaxSteamErrMsg ];
+enum ESteamAPIInitResult { k_ESteamAPIInitResult_OK = 0, k_ESteamAPIInitResult_FailedGeneric = 1, k_ESteamAPIInitResult_NoSteamClient = 2, k_ESteamAPIInitResult_VersionMismatch = 3 };
+STEAMAPI_API ESteamAPIInitResult S_CALLTYPE SteamInternal_SteamAPI_Init( const char *pszInternalCheckInterfaceVersions, SteamErrMsg *pOutErrMsg ) { PRINT_DEBUG("SteamInternal_SteamAPI_Init called\n"); if (SteamAPI_Init()) return k_ESteamAPIInitResult_OK; if (pOutErrMsg) { strncpy((char*)pOutErrMsg, "SteamInitEx failed", k_cchMaxSteamErrMsg); } return k_ESteamAPIInitResult_FailedGeneric; }
+STEAMAPI_API ESteamAPIInitResult S_CALLTYPE SteamAPI_InitEx( SteamErrMsg *pOutErrMsg ) { PRINT_DEBUG("SteamAPI_InitEx called\n"); if (SteamAPI_Init()) return k_ESteamAPIInitResult_OK; if (pOutErrMsg) { strncpy((char*)pOutErrMsg, "SteamAPI_InitEx failed", k_cchMaxSteamErrMsg); } return k_ESteamAPIInitResult_FailedGeneric; }
+STEAMAPI_API ESteamAPIInitResult S_CALLTYPE SteamAPI_InitFlat( SteamErrMsg *pOutErrMsg ) { PRINT_DEBUG("SteamAPI_InitFlat called\n"); if (SteamAPI_Init()) return k_ESteamAPIInitResult_OK; if (pOutErrMsg) { strncpy((char*)pOutErrMsg, "SteamAPI_InitFlat failed", k_cchMaxSteamErrMsg); } return k_ESteamAPIInitResult_FailedGeneric; }
+STEAMAPI_API ESteamAPIInitResult S_CALLTYPE SteamInternal_GameServer_Init_V2( uint32 unIP, uint16 usSteamPort, uint16 usGamePort, uint16 usQueryPort, int eServerMode, const char *pchVersionString, const char *pszInternalCheckInterfaceVersions, SteamErrMsg *pOutErrMsg ) { PRINT_DEBUG("SteamInternal_GameServer_Init_V2 called\n"); return k_ESteamAPIInitResult_FailedGeneric; }
+
+
+extern "C" STEAMAPI_API void* S_CALLTYPE SteamAPI_SteamTimeline_v001() { return (void*)1; }

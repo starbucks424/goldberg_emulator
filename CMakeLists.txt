@@ -24,34 +24,43 @@ endif()
 option(EMU_EXPERIMENTAL_BUILD "Enable experimental build" OFF)
 
 # Set CXX standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (APPLE)
-	set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
-	set(protobuf_BUILD_TESTS CACHE BOOL OFF FORCE)
+        set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+        set(protobuf_BUILD_TESTS CACHE BOOL OFF FORCE)
 
-	include(FetchContent)
-	set(FetchContent_Quiet CACHE BOOL OFF FORCE)
-	FetchContent_Declare(
-	  Protobuf
-	  PREFIX			protobuf
-	  GIT_REPOSITORY    https://github.com/protocolbuffers/protobuf
-	  GIT_TAG           v23.1
-	  GIT_SUBMODULES	"third_party/abseil-cpp"
-	  GIT_SHALLOW		ON
-	  GIT_PROGRESS		ON
-	  OVERRIDE_FIND_PACKAGE
-	)
+        include(FetchContent)
+        set(FetchContent_Quiet CACHE BOOL OFF FORCE)
+        FetchContent_Declare(
+          Protobuf
+          PREFIX                        protobuf
+          GIT_REPOSITORY    https://github.com/protocolbuffers/protobuf
+          GIT_TAG           v23.1
+          GIT_SUBMODULES        "third_party/abseil-cpp"
+          GIT_SHALLOW           ON
+          GIT_PROGRESS          ON
+        )
+        FetchContent_MakeAvailable(Protobuf)
+
+        # Manually compile protobuf to avoid needing FindProtobuf which corrupts the include path!
+        set(PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/net.pb.cc")
+        set(PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/net.pb.h")
+        add_custom_command(
+            OUTPUT ${PROTO_SRCS} ${PROTO_HDRS}
+            COMMAND $<TARGET_FILE:protoc> --cpp_out=${CMAKE_CURRENT_BINARY_DIR} -I${CMAKE_CURRENT_SOURCE_DIR}/dll ${CMAKE_CURRENT_SOURCE_DIR}/dll/net.proto
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dll/net.proto protoc
+        )
+else()
+        # Find the protobuf compiler and libraries
+        include(FindProtobuf)
+        find_package(Protobuf 3.1.0 REQUIRED)
+
+        # Generate the .h and .cxx files for dll/net.proto
+        protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS dll/net.proto)
 endif()
-
-# Find the protobuf compiler and libraries
-include(FindProtobuf)
-find_package(Protobuf 3.1.0 REQUIRED)
-
-# Generate the .h and .cxx files for dll/net.proto
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS dll/net.proto)
 
 # Print path to generated files
 message(STATUS "PROTO_SRCS = ${PROTO_SRCS}")
@@ -141,7 +150,7 @@ target_include_directories(${LIB_STEAM_API}
 # Link the required libraries
 target_link_libraries(${LIB_STEAM_API}
 	PRIVATE
-	protobuf::libprotobuf
+	libprotobuf
 	$<$<BOOL:${WIN32}>:ws2_32>
 	$<$<BOOL:${WIN32}>:iphlpapi>
 	$<$<AND:$<BOOL:${WIN32}>,$<BOOL:${EMU_EXPERIMENTAL_BUILD}>,$<BOOL:${EMU_OVERLAY}>>:opengl32.lib>
@@ -271,7 +280,7 @@ target_include_directories(${BIN_LOBBY_CONNECT}
 # Link the required libraries
 target_link_libraries(${BIN_LOBBY_CONNECT}
 	PRIVATE
-	protobuf::libprotobuf
+	libprotobuf
 	$<$<BOOL:${WIN32}>:ws2_32>
 	$<$<BOOL:${WIN32}>:iphlpapi>
 	$<$<BOOL:${WIN32}>:comdlg32>

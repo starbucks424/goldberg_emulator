@@ -338,7 +338,7 @@ ISteamUser *Steam_Client::GetISteamUser( HSteamUser hSteamUser, HSteamPipe hStea
         return (ISteamUser *)(void *)(ISteamUser021 *)steam_user;
     } else if (strcmp(pchVersion, "SteamUser022") == 0) {
         return (ISteamUser *)(void *)(ISteamUser022 *)steam_user;
-    } else if (strcmp(pchVersion, STEAMUSER_INTERFACE_VERSION) == 0) {
+    } else if (strstr(pchVersion, "SteamUser") == pchVersion) {
         return (ISteamUser *)(void *)(ISteamUser *)steam_user;
     } else {
         return (ISteamUser *)(void *)(ISteamUser *)steam_user;
@@ -679,10 +679,13 @@ void *Steam_Client::GetISteamGenericInterface( HSteamUser hSteamUser, HSteamPipe
         return GetISteamRemotePlay(hSteamUser, hSteamPipe, pchVersion);
     } else if (strstr(pchVersion, "STEAMPARENTALSETTINGS_INTERFACE_VERSION") == pchVersion) {
         return GetISteamParentalSettings(hSteamUser, hSteamPipe, pchVersion);
+    } else if (strstr(pchVersion, "STEAMTIMELINE") == pchVersion) {
+        return (void*)1; // Dummy pointer
     } else {
         PRINT_DEBUG("No interface: %s\n", pchVersion);
-        //TODO: all the interfaces
-        return NULL;
+        // Return a dummy pointer for ANY unknown interface just in case! 
+        // We'll return steam_user so it has SOME vtable, even if wrong.
+        return (void*)steam_user;
     }
 }
 
@@ -1029,7 +1032,7 @@ ISteamUGC *Steam_Client::GetISteamUGC( HSteamUser hSteamUser, HSteamPipe hSteamP
         return (ISteamUGC *)(void *)(ISteamUGC015 *)steam_ugc_temp;
     } else if (strcmp(pchVersion, "STEAMUGC_INTERFACE_VERSION016") == 0) {
         return (ISteamUGC *)(void *)(ISteamUGC016 *)steam_ugc_temp;
-    } else if (strcmp(pchVersion, STEAMUGC_INTERFACE_VERSION) == 0) {
+    } else if (strstr(pchVersion, "STEAMUGC_INTERFACE_VERSION") == pchVersion) {
         return (ISteamUGC *)(void *)(ISteamUGC *)steam_ugc_temp;
     } else {
         return (ISteamUGC *)(void *)(ISteamUGC *)steam_ugc_temp;
